@@ -20,15 +20,12 @@ public class MoviesServer {
         }
     }
 
-    public MoviesServer(MoviesStore moviesStore, int i, HttpServer server) {
-        this.server = server;
-    }
-
-    public MoviesServer(MoviesStore moviesStore, int i, HttpServer server) {
-        this.server = server;
-    }
-
     public MoviesServer(MoviesStore moviesStore, int i) {
+        try {
+            server = HttpServer.create(new InetSocketAddress(8080), 0);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось создать HTTP-сервер", e);
+        }
     }
 
     public void start() {
