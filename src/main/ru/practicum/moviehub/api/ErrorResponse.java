@@ -9,7 +9,6 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    // Геттеры
     public int getStatusCode() {
         return statusCode;
     }
