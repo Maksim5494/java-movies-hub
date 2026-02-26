@@ -8,21 +8,10 @@ import java.net.InetSocketAddress;
 public class MoviesServer {
     private final HttpServer server;
 
-    public MoviesServer() {
+    public MoviesServer(MoviesStore moviesStore, int port) {
         try {
-            server = HttpServer.create(new InetSocketAddress(8080), 0);
-
-            // Добавьте контекст для /movies и укажите созданный хендлер
-            server.createContext("/movies", new MoviesHandler());
-
-        } catch (IOException e) {
-            throw new RuntimeException("Не удалось создать HTTP-сервер", e);
-        }
-    }
-
-    public MoviesServer(MoviesStore moviesStore, int i) {
-        try {
-            server = HttpServer.create(new InetSocketAddress(8080), 0);
+            server = HttpServer.create(new InetSocketAddress(port), 0);
+            server.createContext("/movies", new MoviesHandler(moviesStore));
         } catch (IOException e) {
             throw new RuntimeException("Не удалось создать HTTP-сервер", e);
         }

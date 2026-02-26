@@ -3,6 +3,8 @@ package ru.practicum.moviehub.http;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.practicum.moviehub.store.MoviesStore;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -19,8 +21,12 @@ public class MoviesApiTest {
 
     @BeforeAll
     static void beforeAll() {
-        server = new MoviesServer();
-        server.start();
+        MoviesStore moviesStore = new MoviesStore(); // Создаем экземпляр MoviesStore
+        int port = 8080; // Указываем номер порта
+
+        server = new MoviesServer(moviesStore, port); // Создаем экземпляр MoviesServer с передачей аргументов
+        server.start(); // Запускаем сервер
+
         client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(2))
                 .build();

@@ -5,6 +5,7 @@ public class Movie {
     private int year;
     private String genre;
     private double rating;
+    private long id;
 
     public Movie(String title, int year, String genre, double rating) {
         this.title = title;
@@ -13,7 +14,6 @@ public class Movie {
         this.rating = rating;
     }
 
-    // Геттеры и сеттеры
     public String getTitle() {
         return title;
     }
@@ -44,5 +44,9 @@ public class Movie {
 
     public void setRating(double rating) {
         this.rating = rating;
+    }
+
+    public long getId() {
+        return id;
     }
 }
