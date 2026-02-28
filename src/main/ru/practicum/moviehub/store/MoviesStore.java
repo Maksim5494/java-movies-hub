@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 public class MoviesStore {
     private List<Movie> movies;
+    private long idCounter = 1;
 
     public MoviesStore() {
 
@@ -39,13 +40,7 @@ public class MoviesStore {
     }
 
     public boolean removeMovieById(long id) {
-        for (Movie movie : movies) {
-            if (movie.getId() == id) {
-                movies.remove(movie);
-                return true;
-            }
-        }
-        return false;
+        return movies.removeIf(movie -> movie.getId() == id);
     }
 
     public List<Movie> findMoviesByYear(int year) {
@@ -71,6 +66,7 @@ public class MoviesStore {
     }
 
     public int getMoviesCount() {
+
         return movies.size();
     }
 

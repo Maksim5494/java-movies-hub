@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.practicum.moviehub.store.MoviesStore;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -57,5 +58,70 @@ public class MoviesApiTest {
         String body = resp.body().trim();
         assertTrue(body.startsWith("[") && body.endsWith("]"),
                 "Ожидается JSON-массив");
+    }
+
+    @Test
+    public void addMovie_withInvalidJson_returns400() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies"))
+                .POST(HttpRequest.BodyPublishers.ofString("{ \"title\": \"Inception\", \"year\": \"not_a_number\" }"))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(400, response.statusCode());
+    }
+
+    @Test
+    public void addMovie_withMissingFields_returns400() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies"))
+                .POST(HttpRequest.BodyPublishers.ofString("{}"))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(400, response.statusCode());
+    }
+
+    @Test
+    public void deleteMovie_whenIdDoesNotExist_returns404() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies/999"))
+                .DELETE()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(404, response.statusCode());
+    }
+
+    @Test
+    public void deleteMovie_withInvalidIdFormat_returns400() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies/abc"))
+                .DELETE()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(400, response.statusCode());
+    }
+
+    @Test
+    public void getMovies_afterDeletion_returnsUpdatedList() throws IOException, InterruptedException {
+        String movieJson = "{\"id\":1, \"title\":\"Interstellar\", \"year\":2014, \"director\":\"Nolan\"}";
+        client.send(HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies"))
+                .POST(HttpRequest.BodyPublishers.ofString(movieJson))
+                .build(), HttpResponse.BodyHandlers.ofString());
+        client.send(HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies/1"))
+                .DELETE()
+                .build(), HttpResponse.BodyHandlers.ofString());
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/movies"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+        assertEquals("[]", response.body());
     }
 }
