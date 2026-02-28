@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 
 abstract class BaseHttpHandler implements HttpHandler {
     protected static final String CT_JSON = "application/json; charset=UTF-8";
+
     protected void sendJson(HttpExchange ex, int status, String json) throws IOException {
         ex.getResponseHeaders().set("Content-Type", CT_JSON);
         ex.sendResponseHeaders(status, json.getBytes(StandardCharsets.UTF_8).length);
