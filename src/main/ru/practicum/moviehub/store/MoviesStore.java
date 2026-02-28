@@ -4,6 +4,7 @@ import ru.practicum.moviehub.model.Movie;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class MoviesStore {
@@ -40,7 +41,13 @@ public class MoviesStore {
     }
 
     public boolean removeMovieById(long id) {
-        return movies.removeIf(movie -> movie.getId() == id);
+        for (Movie movie : movies) {
+            if (movie.getId() == id) {
+                movies.remove(movie);
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<Movie> findMoviesByYear(int year) {
@@ -54,8 +61,6 @@ public class MoviesStore {
                 .filter(movie -> genre.equalsIgnoreCase(movie.getGenre()))
                 .collect(Collectors.toList());
     }
-
-
 
     public Movie getMovieByIndex(int index) {
         if (index >= 0 && index < movies.size()) {
@@ -92,4 +97,14 @@ public class MoviesStore {
     public List<Movie> getAllMovies() {
         return movies;
     }
+
+    public Optional<Movie> getById(long id) {
+        for (Movie movie : movies) {
+            if (movie.getId() == id) {
+                return Optional.of(movie);
+            }
+        }
+        return Optional.empty();
+    }
+
 }

@@ -22,11 +22,11 @@ public class MoviesApiTest {
 
     @BeforeAll
     static void beforeAll() {
-        MoviesStore moviesStore = new MoviesStore(); // Создаем экземпляр MoviesStore
-        int port = 8080; // Указываем номер порта
+        MoviesStore moviesStore = new MoviesStore();
+        int port = 8080;
 
-        server = new MoviesServer(moviesStore, port); // Создаем экземпляр MoviesServer с передачей аргументов
-        server.start(); // Запускаем сервер
+        server = new MoviesServer(moviesStore, port);
+        server.start();
 
         client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(2))
