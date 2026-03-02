@@ -7,7 +7,11 @@ import java.util.Optional;
 
 public class MoviesStore {
     private final List<Movie> movies = new ArrayList<>();
-    public long idCounter = 1;
+    private long idCounter = 1;
+
+    public long getIdCounter() {
+        return idCounter;
+    }
 
     public void addMovie(Movie movie) {
         movie.setId(idCounter++);

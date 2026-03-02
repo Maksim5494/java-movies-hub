@@ -29,7 +29,7 @@ public class MoviesStoreTest {
         assertEquals(2, moviesStore.getAllMovies().size());
         moviesStore.clear();
         assertTrue(moviesStore.getAllMovies().isEmpty());
-        assertEquals(0, moviesStore.idCounter);
+        assertEquals(0, moviesStore.getIdCounter());
     }
 
 }
