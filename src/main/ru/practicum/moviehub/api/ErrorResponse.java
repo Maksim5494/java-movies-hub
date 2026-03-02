@@ -10,10 +10,12 @@ public class ErrorResponse {
     }
 
     public int getStatusCode() {
+
         return statusCode;
     }
 
     public String getMessage() {
+
         return message;
     }
 }

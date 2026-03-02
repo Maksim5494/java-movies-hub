@@ -1,22 +1,20 @@
 package ru.practicum.moviehub.http;
 
+import com.google.gson.Gson;
+import java.nio.charset.StandardCharsets;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.store.MoviesStore;
-
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-public class MoviesHandler implements HttpHandler {
+public class MoviesHandler extends BaseHttpHandler {
     private final MoviesStore moviesStore;
-    private final ObjectMapper objectMapper;
+    private final Gson gson = new Gson();
+    private char[] bytes;
 
     public MoviesHandler(MoviesStore moviesStore) {
         this.moviesStore = moviesStore;
-        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -26,17 +24,16 @@ public class MoviesHandler implements HttpHandler {
         String[] pathParts = path.split("/");
 
         try {
-            if (method.equals("GET") && pathParts.length == 2) {
+            if (method.equals("GET") && pathParts.length == 2 && pathParts[1].equals("movies")) {
                 handleGetMovies(exchange);
-            } else if (method.equals("POST") && pathParts.length == 2) {
+            } else if (method.equals("POST") && pathParts.length == 2 && pathParts[1].equals("movies")) {
                 handlePostMovie(exchange);
             } else if (pathParts.length == 3 && pathParts[1].equals("movies")) {
                 handleIdRequest(exchange, method, pathParts[2]);
             } else {
-                sendNotFound(exchange, "Endpoint not found");
+                exchange.sendResponseHeaders(404, -1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             exchange.sendResponseHeaders(500, -1);
         } finally {
             exchange.close();
@@ -44,25 +41,24 @@ public class MoviesHandler implements HttpHandler {
     }
 
     private void handleGetMovies(HttpExchange exchange) throws IOException {
-        sendResponse(exchange, objectMapper.writeValueAsString(moviesStore.getAllMovies()), 200);
+        String json = gson.toJson(moviesStore.getAllMovies());
+        sendJson(exchange, 200, json);
     }
 
     private void handlePostMovie(HttpExchange exchange) throws IOException {
         try {
             byte[] bytes = exchange.getRequestBody().readAllBytes();
-            String body = new String(bytes, StandardCharsets.UTF_8);
+            Movie movie = gson.fromJson(new String(bytes, StandardCharsets.UTF_8), Movie.class);
 
-            Movie movie = objectMapper.readValue(bytes, Movie.class);
-
-            if (movie == null || movie.getTitle() == null || movie.getTitle().isBlank() || movie.getYear() <= 0) {
-                sendBadRequest(exchange, "Invalid movie fields: title is required and year must be > 0");
+            if (movie.getTitle() == null || movie.getTitle().isBlank() || movie.getYear() <= 0) {
+                exchange.sendResponseHeaders(400, -1);
                 return;
             }
 
             moviesStore.addMovie(movie);
-            sendResponse(exchange, objectMapper.writeValueAsString(movie), 201);
+            sendJson(exchange, 201, gson.toJson(movie));
         } catch (Exception e) {
-            sendBadRequest(exchange, "Invalid JSON format");
+            exchange.sendResponseHeaders(400, -1);
         }
     }
 
@@ -71,43 +67,25 @@ public class MoviesHandler implements HttpHandler {
         try {
             id = Long.parseLong(idStr);
         } catch (NumberFormatException e) {
-            sendBadRequest(exchange, "Invalid ID format");
+            exchange.sendResponseHeaders(400, -1);
             return;
         }
 
         if (method.equals("GET")) {
             Optional<Movie> movieOpt = moviesStore.getById(id);
             if (movieOpt.isEmpty()) {
-                sendNotFound(exchange, "Movie with id " + id + " not found");
+                exchange.sendResponseHeaders(404, -1);
             } else {
-                sendResponse(exchange, objectMapper.writeValueAsString(movieOpt.get()), 200);
+                sendJson(exchange, 200, gson.toJson(movieOpt.get()));
             }
         } else if (method.equals("DELETE")) {
-            boolean removed = moviesStore.removeMovieById(id);
-            if (removed) {
-                exchange.sendResponseHeaders(204, -1); // No Content
+            if (moviesStore.removeMovieById(id)) {
+                sendNoContent(exchange);
             } else {
-                sendNotFound(exchange, "Movie with id " + id + " not found");
+                exchange.sendResponseHeaders(404, -1);
             }
         } else {
             exchange.sendResponseHeaders(405, -1);
         }
-    }
-
-    private void sendResponse(HttpExchange exchange, String response, int statusCode) throws IOException {
-        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.sendResponseHeaders(statusCode, bytes.length);
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(bytes);
-        }
-    }
-
-    private void sendBadRequest(HttpExchange exchange, String message) throws IOException {
-        exchange.sendResponseHeaders(400, -1);
-    }
-
-    private void sendNotFound(HttpExchange exchange, String message) throws IOException {
-        exchange.sendResponseHeaders(404, -1);
     }
 }

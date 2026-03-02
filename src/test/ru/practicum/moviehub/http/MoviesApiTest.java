@@ -1,8 +1,6 @@
 package ru.practicum.moviehub.http;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import ru.practicum.moviehub.store.MoviesStore;
 
 import java.io.IOException;
@@ -19,22 +17,19 @@ public class MoviesApiTest {
     private static final String BASE = "http://localhost:8080";
     private static MoviesServer server;
     private static HttpClient client;
+    private MoviesStore store;
 
-    @BeforeAll
-    static void beforeAll() {
-        MoviesStore moviesStore = new MoviesStore();
-        int port = 8080;
-
-        server = new MoviesServer(moviesStore, port);
+    @BeforeEach
+    void setUp() throws IOException {
+        store = new MoviesStore();
+        server = new MoviesServer(store, 8080);
         server.start();
-
-        client = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(2))
-                .build();
+        client = HttpClient.newHttpClient();
     }
 
-    @AfterAll
-    static void afterAll() {
+
+    @AfterEach
+    void tearDown() {
         server.stop();
     }
 
